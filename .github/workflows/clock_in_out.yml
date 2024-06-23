@@ -2,9 +2,10 @@ name: Clock In/Out
 
 on:
   schedule:
-    # Run every weekday at random times between 8:30-9:00 and 17:30-18:00
     - cron: '30-59 8 * * 1-6'  # Monday-Saturday, between 8:30 and 9:00
     - cron: '30-59 17 * * 1-6' # Monday-Saturday, between 17:30 and 18:00
+  workflow_dispatch:  # Enable manual triggering
+
 
 jobs:
   clock_in_out:
