@@ -26,6 +26,8 @@ def login(driver):
     try:
         logging.info("Navigating to login page.")
         driver.get(URL)
+
+        # Wait until the email field is present
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "login_email")))
 
         email_field = driver.find_element(By.ID, "login_email")
@@ -36,6 +38,7 @@ def login(driver):
         password_field.send_keys(PASSWORD)
         login_button.click()
 
+        # Wait until the attendance button is present
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "attendance_button")))
 
         logging.info("Logged in successfully.")
@@ -50,6 +53,7 @@ def clock_in_out(driver):
         attendance_button = driver.find_element(By.ID, "attendance_button")
         attendance_button.click()
 
+        # Wait until the success message is present
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "attendance_success_message")))
 
         logging.info("Clock-in/clock-out successful.")
@@ -64,6 +68,7 @@ def logout(driver):
         logout_button = driver.find_element(By.ID, "logout_button")
         logout_button.click()
         
+        # Wait until the login page is present
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "login_email")))
         
         logging.info("Logged out successfully.")
