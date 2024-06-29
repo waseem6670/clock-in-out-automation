@@ -30,18 +30,28 @@ def clock_in_or_out(action):
     
     try:
         logging.info("Filling in the login form.")
-        driver.find_element(By.ID, "login_email").send_keys(EMAIL)
-        driver.find_element(By.ID, "login_password").send_keys(PASSWORD)
-        driver.find_element(By.XPATH, "//button[@type='submit']").click()
+        email_element = driver.find_element(By.ID, "UserLogin_username")
+        password_element = driver.find_element(By.ID, "UserLogin_password")
+        submit_button = driver.find_element(By.ID, "login-submit")
+        
+        if email_element and password_element and submit_button:
+            email_element.send_keys(EMAIL)
+            password_element.send_keys(PASSWORD)
+            submit_button.click()
+        else:
+            logging.error("Login elements not found.")
         
         time.sleep(5)  # Wait for login to process
         logging.info("Logged in successfully.")
         
         # Navigate to the clock-in/clock-out button and click it
         button = driver.find_element(By.XPATH, "//button[@id='clockin_out_button_id']")
-        button.click()
-        
-        logging.info(f"{action.capitalize()} successful.")
+        if button:
+            button.click()
+            logging.info(f"{action.capitalize()} successful.")
+        else:
+            logging.error(f"Clock-in/clock-out button not found for {action}.")
+            
     except Exception as e:
         logging.error(f"Failed to {action}: {e}")
     finally:
