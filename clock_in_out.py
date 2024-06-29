@@ -1,115 +1,69 @@
-import os
 import time
-import random
-from datetime import datetime
-import pytz
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 import logging
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Setup logging
+# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Get credentials from environment variables
-EMAIL = os.getenv('EMAIL')
-PASSWORD = os.getenv('PASSWORD')
-
-# Define the website URL
+EMAIL = "wasim.raja@rochem.in"
+PASSWORD = "Rochem@123"
 URL = "https://rochem.darwinbox.in/user/login"
 
-def login(driver):
-    try:
-        logging.info("Navigating to login page.")
-        driver.get(URL)
-
-        # Wait until the email field is present
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "login_email")))
-
-        email_field = driver.find_element(By.ID, "login_email")
-        password_field = driver.find_element(By.ID, "login_password")
-        login_button = driver.find_element(By.XPATH, "//button[@type='submit']")
-
-        email_field.send_keys(EMAIL)
-        password_field.send_keys(PASSWORD)
-        login_button.click()
-
-        # Wait until the attendance button is present
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "attendance_button")))
-
-        logging.info("Logged in successfully.")
-        return True
-    except Exception as e:
-        logging.error(f"Login failed: {e}")
-        return False
-
-def clock_in_out(driver):
-    try:
-        logging.info("Navigating to attendance page.")
-        attendance_button = driver.find_element(By.ID, "attendance_button")
-        attendance_button.click()
-
-        # Wait until the success message is present
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "attendance_success_message")))
-
-        logging.info("Clock-in/clock-out successful.")
-        return True
-    except Exception as e:
-        logging.error(f"Clock-in/clock-out failed: {e}")
-        return False
-
-def logout(driver):
-    try:
-        logging.info("Logging out.")
-        logout_button = driver.find_element(By.ID, "logout_button")
-        logout_button.click()
-        
-        # Wait until the login page is present
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "login_email")))
-        
-        logging.info("Logged out successfully.")
-        return True
-    except Exception as e:
-        logging.error(f"Logout failed: {e}")
-        return False
-
-def main():
+def setup_driver():
+    logging.info("Setting up the Chrome driver.")
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+    return driver
 
-    # Time zone for IST
-    ist = pytz.timezone('Asia/Kolkata')
-    now = datetime.now(ist)
-    current_hour = now.hour
-    current_minute = now.minute
+def clock_in_or_out(action):
+    logging.info(f"Attempting to {action}.")
+    driver = setup_driver()
+    driver.get(URL)
+    time.sleep(5)  # Give the page time to load
+    
+    try:
+        logging.info("Filling in the login form.")
+        driver.find_element(By.ID, "login_email").send_keys(EMAIL)
+        driver.find_element(By.ID, "login_password").send_keys(PASSWORD)
+        driver.find_element(By.XPATH, "//button[@type='submit']").click()
+        
+        time.sleep(5)  # Wait for login to process
+        logging.info("Logged in successfully.")
+        
+        # Navigate to the clock-in/clock-out button and click it
+        button = driver.find_element(By.XPATH, "//button[@id='clockin_out_button_id']")
+        button.click()
+        
+        logging.info(f"{action.capitalize()} successful.")
+    except Exception as e:
+        logging.error(f"Failed to {action}: {e}")
+    finally:
+        driver.quit()
 
-    if now.weekday() == 6:  # 6 means Sunday
-        logging.info("It's Sunday. No clock-in/clock-out required.")
-        return
+def main():
+    logging.info("Starting clock-in/out script.")
+    
+    current_hour = time.gmtime().tm_hour + 5  # Convert UTC to IST
+    current_minute = time.gmtime().tm_min + 30
+    if current_minute >= 60:
+        current_minute -= 60
+        current_hour += 1
 
-    if (8 <= current_hour < 9) or (17 <= current_hour < 18):
-        # Generate a random delay within the specified range
-        if 8 <= current_hour < 9:
-            delay = random.randint(0, 30) * 60  # 0 to 30 minutes in seconds
-        else:
-            delay = random.randint(0, 30) * 60  # 0 to 30 minutes in seconds
-
-        logging.info(f"Waiting for {delay // 60} minutes before clocking in/out.")
-        time.sleep(delay)
-
-        if login(driver):
-            if clock_in_out(driver):
-                logout(driver)
-
-    driver.quit()
+    if current_hour == 8 and 30 <= current_minute <= 59:
+        logging.info("Performing clock-in.")
+        clock_in_or_out("clock-in")
+    elif current_hour == 17 and 30 <= current_minute <= 59:
+        logging.info("Performing clock-out.")
+        clock_in_or_out("clock-out")
+    else:
+        logging.info("Current time is not within the clock-in/out range.")
 
 if __name__ == "__main__":
     main()
