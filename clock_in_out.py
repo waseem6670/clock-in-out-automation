@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import datetime
 import os
+import random
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -62,8 +63,26 @@ def clock_in_or_out(action):
     finally:
         driver.quit()
 
+def run_at_random_minute(hour, start_minute, end_minute, action):
+    random_minute = random.randint(start_minute, end_minute)
+    target_time = datetime.datetime.combine(datetime.datetime.today(), datetime.time(hour, random_minute))
+    now = datetime.datetime.now()
+    
+    if target_time < now:
+        target_time += datetime.timedelta(days=1)  # If the target time is already past, schedule for the next day
+    
+    wait_time = (target_time - now).total_seconds()
+    logging.info(f"Scheduled to {action} at {target_time.strftime('%H:%M')} (in {wait_time / 60:.2f} minutes)")
+    
+    time.sleep(wait_time)
+    clock_in_or_out(action)
+
 def main():
     logging.info("Starting clock-in/out script.")
+    
+    if LEAVE:
+        logging.info("Today is marked as leave. No clock-in/out required.")
+        return
     
     today = datetime.datetime.today()
     current_hour = today.hour + 5  # Convert UTC to IST
@@ -71,17 +90,15 @@ def main():
     if current_minute >= 60:
         current_minute -= 60
         current_hour += 1
-
-    if LEAVE:
-        logging.info("Today is marked as leave. No clock-in/out required.")
-    elif today.weekday() == 6:  # Sunday is 6
+    
+    if today.weekday() == 6:  # Sunday is 6
         logging.info("Today is Sunday. No clock-in/out required.")
-    elif current_hour == 8 and 30 <= current_minute <= 59:
-        logging.info("Performing clock-in.")
-        clock_in_or_out("clock-in")
-    elif current_hour == 17 and 30 <= current_minute <= 59:
-        logging.info("Performing clock-out.")
-        clock_in_or_out("clock-out")
+    elif 8 <= current_hour < 9:
+        logging.info("Scheduling clock-in.")
+        run_at_random_minute(8, 30, 59, "clock-in")
+    elif 17 <= current_hour < 18:
+        logging.info("Scheduling clock-out.")
+        run_at_random_minute(17, 30, 59, "clock-out")
     else:
         logging.info("Current time is not within the clock-in/out range.")
 
