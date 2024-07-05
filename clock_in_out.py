@@ -27,7 +27,7 @@ def clock_in_or_out(action):
     driver.get('https://rochem.darwinbox.in/user/login')
     
     # Perform login
-    driver.find_element(By.ID, "login_email").send_keys(os.getenv('EMAIL'))
+    driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
     driver.find_element(By.ID, "login_password").send_keys(os.getenv('PASSWORD'))
     driver.find_element(By.XPATH, '//*[@id="login_button"]').click()
     
