@@ -36,7 +36,7 @@ def main():
     clock_in_start = "08:30"
     clock_in_end = "09:00"
     clock_out_start = "17:30"
-    clock_out_end = "18:00"
+    clock_out_end = "23:00"
 
     logging.info(f"Current IST time: {current_time}")
     logging.info(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
