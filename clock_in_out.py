@@ -28,8 +28,8 @@ def clock_in_or_out(action):
     
     # Perform login
     driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
-    driver.find_element(By.ID, "login_password").send_keys(os.getenv('PASSWORD'))
-    driver.find_element(By.XPATH, '//*[@id="login_button"]').click()
+    driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
+    driver.find_element(By.ID, "login-submit").click()
     
     time.sleep(2)  # Wait for login to complete
     
