@@ -1,104 +1,66 @@
+import os
+from datetime import datetime, timedelta
+import random
 import time
 import logging
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-import datetime
-import os
-import random
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 
-EMAIL = os.getenv('EMAIL')
-PASSWORD = os.getenv('PASSWORD')
-URL = "https://rochem.darwinbox.in/user/login"
-LEAVE = os.getenv('LEAVE', 'false').lower() == 'true'
-
-def setup_driver():
-    logging.info("Setting up the Chrome driver.")
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run in headless mode
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-    return driver
-
+# Function to perform clock in/out
 def clock_in_or_out(action):
-    logging.info(f"Attempting to {action}.")
-    driver = setup_driver()
-    driver.get(URL)
-    time.sleep(5)  # Give the page time to load
+    driver = webdriver.Chrome()
+    driver.get('https://rochem.darwinbox.in/user/login')
     
-    try:
-        logging.info("Filling in the login form.")
-        email_element = driver.find_element(By.ID, "login_email")
-        password_element = driver.find_element(By.ID, "login_password")
-        submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
-        
-        if email_element and password_element and submit_button:
-            logging.info("Found login elements.")
-            email_element.send_keys(EMAIL)
-            password_element.send_keys(PASSWORD)
-            submit_button.click()
-        else:
-            logging.error("Login elements not found.")
-            return  # Exit the function if elements are not found
-        
-        time.sleep(5)  # Wait for login to process
-        logging.info("Logged in successfully.")
-        
-        # Navigate to the clock-in/clock-out button and click it
-        button = driver.find_element(By.XPATH, "//button[@id='clockin_out_button_id']")
-        if button:
-            button.click()
-            logging.info(f"{action.capitalize()} successful.")
-        else:
-            logging.error(f"Clock-in/clock-out button not found for {action}.")
-            
-    except Exception as e:
-        logging.error(f"Failed to {action}: {e}")
-    finally:
-        driver.quit()
-
-def run_at_random_minute(hour, start_minute, end_minute, action):
-    random_minute = random.randint(start_minute, end_minute)
-    target_time = datetime.datetime.combine(datetime.datetime.today(), datetime.time(hour, random_minute))
-    now = datetime.datetime.now()
+    # Perform login
+    driver.find_element(By.ID, "login_email").send_keys(os.getenv('EMAIL'))
+    driver.find_element(By.ID, "login_password").send_keys(os.getenv('PASSWORD'))
+    driver.find_element(By.XPATH, '//*[@id="login_button"]').click()
     
-    if target_time < now:
-        target_time += datetime.timedelta(days=1)  # If the target time is already past, schedule for the next day
+    time.sleep(2)  # Wait for login to complete
     
-    wait_time = (target_time - now).total_seconds()
-    logging.info(f"Scheduled to {action} at {target_time.strftime('%H:%M')} (in {wait_time / 60:.2f} minutes)")
+    # Perform clock in/out
+    clock_button = driver.find_element(By.XPATH, '//*[@id="clock_button"]')
+    clock_button.click()
     
-    time.sleep(wait_time)
-    clock_in_or_out(action)
+    logging.info(f"{action.capitalize()} successful.")
+    driver.quit()
 
 def main():
-    logging.info("Starting clock-in/out script.")
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
+    current_time = now.strftime("%H:%M")
     
-    if LEAVE:
-        logging.info("Today is marked as leave. No clock-in/out required.")
+    # Define clock-in and clock-out time ranges
+    clock_in_start = "08:30"
+    clock_in_end = "09:00"
+    clock_out_start = "17:30"
+    clock_out_end = "18:00"
+
+    logging.info(f"Current IST time: {current_time}")
+    logging.info(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
+    logging.info(f"Clock-out time range: {clock_out_start} - {clock_out_end}")
+
+    # Check if today is a leave day or Sunday
+    leave = os.getenv('LEAVE', 'false').lower() == 'true'
+    if leave or now.weekday() == 6:  # 6 represents Sunday
+        logging.info("Today is a leave day or Sunday. No clock-in required.")
         return
     
-    today = datetime.datetime.today()
-    current_hour = today.hour + 5  # Convert UTC to IST
-    current_minute = today.minute + 30
-    if current_minute >= 60:
-        current_minute -= 60
-        current_hour += 1
+    # Random delay within the time range
+    if clock_in_start <= current_time <= clock_in_end:
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
+        time.sleep(delay)
+        clock_in_or_out("clockin")
     
-    if today.weekday() == 6:  # Sunday is 6
-        logging.info("Today is Sunday. No clock-in/out required.")
-    elif 8 <= current_hour < 9:
-        logging.info("Scheduling clock-in.")
-        run_at_random_minute(8, 30, 59, "clock-in")
-    elif 17 <= current_hour < 18:
-        logging.info("Scheduling clock-out.")
-        run_at_random_minute(17, 30, 59, "clock-out")
+    elif clock_out_start <= current_time <= clock_out_end:
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
+        time.sleep(delay)
+        clock_in_or_out("clockout")
+    
     else:
         logging.info("Current time is not within the clock-in/out range.")
 
