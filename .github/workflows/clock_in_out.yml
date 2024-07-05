@@ -33,8 +33,3 @@ jobs:
         LEAVE: ${{ secrets.LEAVE }}
       run: |
         python clock_in_out.py
-
-          EMAIL: ${{ secrets.EMAIL }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          LEAVE: ${{ secrets.LEAVE }}
-        run: python clock_in_out.py
