@@ -5,13 +5,25 @@ import time
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
 # Function to perform clock in/out
 def clock_in_or_out(action):
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920x1080')
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
     driver.get('https://rochem.darwinbox.in/user/login')
     
     # Perform login
@@ -36,7 +48,7 @@ def main():
     clock_in_start = "08:30"
     clock_in_end = "09:00"
     clock_out_start = "17:30"
-    clock_out_end = "23:00"
+    clock_out_end = "18:00"
 
     logging.info(f"Current IST time: {current_time}")
     logging.info(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
