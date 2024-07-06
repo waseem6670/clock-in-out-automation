@@ -32,6 +32,7 @@ def clock_in_or_out(action):
     driver.find_element(By.ID, "login-submit").click()
     
     time.sleep(2)  # Wait for login to complete
+    logging.info(f"Logging-in successful.")
     
     # Perform clock in/out
     clock_button = driver.find_element(By.XPATH, '//*[@id="clock_button"]')
