@@ -35,7 +35,7 @@ def clock_in_or_out(action):
     logging.info(f"Logging-in successful.")
     
     # Perform clock in/out
-    clock_button = driver.find_element(By.XPATH, "/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg")
+    clock_button = driver.find_element(By.XPATH, '//*[@id="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]')
     clock_button.click()
     
     logging.info(f"{action.capitalize()} successful.")
