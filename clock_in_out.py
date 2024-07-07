@@ -31,8 +31,10 @@ def clock_in_or_out(action):
     driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
     driver.find_element(By.ID, "login-submit").click()
     
-    time.sleep(2)  # Wait for login to complete
+    
     logging.info(f"Logging-in successful.")
+
+    time.sleep(10)  # Wait for 10 seconds after successful login
     
     # Perform clock in/out
     clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
@@ -79,3 +81,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
