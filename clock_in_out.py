@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -31,17 +33,30 @@ def clock_in_or_out(action):
     driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
     driver.find_element(By.ID, "login-submit").click()
     
-    
-    logging.info(f"Logging-in successful.")
+    logging.info("Logging-in successful.")
 
-    time.sleep(10)  # Wait for 10 seconds after successful login
-    
-    # Perform clock in/out
-    clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
-    clock_button.click()
-    
-    logging.info(f"{action.capitalize()} successful.")
-    driver.quit()
+    try:
+        # Wait for the element to be present and visible
+        logging.info("Waiting for the clock button to be visible.")
+        clock_button = WebDriverWait(driver, 20).until(
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'))
+        )
+
+        # Scroll to the element
+        logging.info("Clock button is visible. Scrolling into view.")
+        driver.execute_script("arguments[0].scrollIntoView(true);", clock_button)
+
+        # Click the element
+        logging.info("Attempting to click the clock button.")
+        clock_button.click()
+        logging.info(f"{action.capitalize()} successful.")
+
+    except Exception as e:
+        logging.error(f"Error occurred during {action}: {e}")
+
+    finally:
+        time.sleep(2)  # Wait for action to complete
+        driver.quit()
 
 def main():
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
@@ -81,4 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
