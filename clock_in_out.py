@@ -53,6 +53,8 @@ def clock_in_or_out(action):
 
     except Exception as e:
         logging.error(f"Error occurred during {action}: {e}")
+        logging.info("Page source at the time of error:")
+        logging.info(driver.page_source)
 
     finally:
         time.sleep(2)  # Wait for action to complete
