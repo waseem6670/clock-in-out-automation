@@ -40,12 +40,14 @@ def clock_in_or_out(action):
         WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
         logging.info("New page loaded successfully.")
 
-        # Perform clock in/out
-        clock_element_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'
-        WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, clock_element_xpath)))
-        clock_button = driver.find_element(By.XPATH, clock_element_xpath)
+        # Define the XPATH or CSS selector for the SVG element
+        svg_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/svg'  # Update this XPATH based on actual SVG element location
+
+        # Perform clock in/out by searching for the SVG element
+        WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, svg_xpath)))
+        clock_button = driver.find_element(By.XPATH, svg_xpath)
         
-        clock_button.click()
+        driver.execute_script("arguments[0].click();", clock_button)
         
         logging.info(f"{action.capitalize()} successful.")
     except TimeoutException:
@@ -80,7 +82,7 @@ def main():
     
     # Random delay within the time range
     if clock_in_start <= current_time <= clock_in_end:
-        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 5) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
         time.sleep(delay)
         clock_in_or_out("clockin")
