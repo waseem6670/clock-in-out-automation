@@ -41,7 +41,7 @@ def clock_in_or_out(action):
         logging.info("New page loaded successfully.")
 
         # Define the XPATH or CSS selector for the SVG element
-        svg_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/svg'  # Update this XPATH based on actual SVG element location
+        svg_xpath = 'https://rochem.darwinbox.in/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg'  # Update this XPATH based on actual SVG element location
 
         # Perform clock in/out by searching for the SVG element
         WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, svg_xpath)))
