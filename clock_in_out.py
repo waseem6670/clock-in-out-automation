@@ -10,28 +10,21 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Setup logging
-# Remove logging configuration since we are not using logging for all image elements anymore
-
-# Function to perform clock in/out
 def clock_in_or_out(action, driver):
-    # Perform clock-in or clock-out action based on 'action' parameter
     try:
-        # Find the <img> tag with Clock.svg
-        clock_img = driver.find_element(By.CSS_SELECTOR, 'img[src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]')
-
-        # Navigate up to the parent element or identify the correct element containing the clock-in/clock-out functionality
-        clock_parent_element = clock_img.find_element(By.XPATH, './parent::*')
-
-        # Perform click action on the identified clock-in/clock-out element
-        clock_parent_element.click()
-
+        # Wait for the clock-in/clock-out button to be clickable
+        clock_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'img[src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]'))
+        )
+        
+        # Click the clock-in/clock-out button
+        clock_button.click()
+        
         # Optionally, add a wait to ensure the click action completes before continuing
         time.sleep(2)  # Adjust the delay as needed
-
-        # Log success
+        
         print(f"{action.capitalize()} successful.")
-
+    
     except Exception as e:
         print(f"Error occurred during {action}: {str(e)}")
 
@@ -82,7 +75,7 @@ def main():
         clock_in_or_out("clockin", driver)
         driver.quit()
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 1) * 60  # Random delay between 0 and 30 minutes
         print(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         options = Options()
