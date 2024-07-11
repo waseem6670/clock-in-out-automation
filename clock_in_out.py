@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -31,12 +33,16 @@ def clock_in_or_out(action):
     driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
     driver.find_element(By.ID, "login-submit").click()
     
-    time.sleep(2)  # Wait for login to complete
-    logging.info(f"Logging-in successful.")
-    
+    # Wait for the new page to load by waiting for a known element on the new page
+    new_page_element_xpath = '//*[@id="dbox-top-bar"]'
+    WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
+    logging.info("New page loaded successfully.")
+
     # Perform clock in/out
-    clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
-                                                
+    clock_element_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'
+    WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, clock_element_xpath)))
+    clock_button = driver.find_element(By.XPATH, clock_element_xpath)
+    
     clock_button.click()
     
     logging.info(f"{action.capitalize()} successful.")
