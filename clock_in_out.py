@@ -39,7 +39,12 @@ def clock_in_or_out(action):
         new_page_element_xpath = '//*[@id="dbox-top-bar"]'
         WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
         logging.info("New page loaded successfully.")
-
+        
+        # Debug: List all image elements and their src attributes
+        images = driver.find_elements(By.TAG_NAME, 'img')
+        for img in images:
+            logging.info(f"Found image with src: {img.get_attribute('src')}")
+        
         # Define the XPATH for the clock-in/clock-out image
         img_src = 'https://rochem.darwinbox.in/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg'
         img_xpath = f'//*[@id="dbox-top-bar"]//img[@src="{img_src}"]'
@@ -83,13 +88,13 @@ def main():
     
     # Random delay within the time range
     if clock_in_start <= current_time <= clock_in_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
         time.sleep(delay)
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
@@ -99,4 +104,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
