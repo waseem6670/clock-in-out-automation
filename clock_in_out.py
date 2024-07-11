@@ -6,8 +6,8 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -40,12 +40,13 @@ def clock_in_or_out(action):
         WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
         logging.info("New page loaded successfully.")
 
-        # Define the XPATH or CSS selector for the SVG element
-        svg_xpath = 'https://rochem.darwinbox.in/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg'  # Update this XPATH based on actual SVG element location
+        # Define the XPATH for the clock-in/clock-out image
+        img_src = 'https://rochem.darwinbox.in/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg'
+        img_xpath = f'//*[@id="dbox-top-bar"]//img[@src="{img_src}"]'
 
-        # Perform clock in/out by searching for the SVG element
-        WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, svg_xpath)))
-        clock_button = driver.find_element(By.XPATH, svg_xpath)
+        # Perform clock in/out by searching for the image element
+        WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, img_xpath)))
+        clock_button = driver.find_element(By.XPATH, img_xpath)
         
         driver.execute_script("arguments[0].click();", clock_button)
         
@@ -82,13 +83,13 @@ def main():
     
     # Random delay within the time range
     if clock_in_start <= current_time <= clock_in_end:
-        delay = random.randint(0, 5) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
         time.sleep(delay)
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 5) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
@@ -98,3 +99,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
