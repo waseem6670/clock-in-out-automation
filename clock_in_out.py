@@ -10,6 +10,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -33,20 +34,29 @@ def clock_in_or_out(action):
     driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
     driver.find_element(By.ID, "login-submit").click()
     
-    # Wait for the new page to load by waiting for a known element on the new page
-    new_page_element_xpath = '//*[@id="dbox-top-bar"]'
-    WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
-    logging.info("New page loaded successfully.")
+    try:
+        # Wait for the new page to load by waiting for a known element on the new page
+        new_page_element_xpath = '//*[@id="dbox-top-bar"]'
+        WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, new_page_element_xpath)))
+        logging.info("New page loaded successfully.")
 
-    # Perform clock in/out
-    clock_element_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'
-    WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, clock_element_xpath)))
-    clock_button = driver.find_element(By.XPATH, clock_element_xpath)
-    
-    clock_button.click()
-    
-    logging.info(f"{action.capitalize()} successful.")
-    driver.quit()
+        # Perform clock in/out
+        clock_element_xpath = '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'
+        WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, clock_element_xpath)))
+        clock_button = driver.find_element(By.XPATH, clock_element_xpath)
+        
+        clock_button.click()
+        
+        logging.info(f"{action.capitalize()} successful.")
+    except TimeoutException:
+        logging.error(f"TimeoutException: Could not find the clock-in/clock-out element.")
+        # Capture the page source for debugging
+        page_source = driver.page_source
+        with open("page_source.html", "w", encoding="utf-8") as f:
+            f.write(page_source)
+        logging.info("Page source saved to page_source.html for debugging.")
+    finally:
+        driver.quit()
 
 def main():
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
@@ -76,7 +86,7 @@ def main():
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 5) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
