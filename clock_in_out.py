@@ -2,31 +2,53 @@ import os
 from datetime import datetime, timedelta
 import random
 import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
-def clock_in_or_out(action, driver):
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
+# Function to perform clock in/out
+def clock_in_or_out(action):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920x1080')
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
     try:
-        # Wait for the clock-in/clock-out button to be clickable
-        clock_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'img[src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]'))
-        )
+        driver.get('https://rochem.darwinbox.in/user/login')
+
+        # Perform login
+        driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
+        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
+        driver.find_element(By.ID, "login-submit").click()
         
-        # Click the clock-in/clock-out button
+        logging.info(f"Logging-in successful.")
+        time.sleep(10)  # Wait for 10 seconds after successful login
+        
+        # Open the ribbon menu if necessary
+        menu_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/a')
+        menu_button.click()
+        time.sleep(2)  # Wait for the menu to open
+
+        # Perform clock in/out
+        clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
         clock_button.click()
         
-        # Optionally, add a wait to ensure the click action completes before continuing
-        time.sleep(2)  # Adjust the delay as needed
-        
-        print(f"{action.capitalize()} successful.")
-    
+        logging.info(f"{action.capitalize()} successful.")
     except Exception as e:
-        print(f"Error occurred during {action}: {str(e)}")
+        logging.error(f"An error occurred during {action}: {e}")
+    finally:
+        driver.quit()
 
 def main():
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
@@ -38,69 +60,31 @@ def main():
     clock_out_start = "17:30"
     clock_out_end = "23:00"
 
-    print(f"Current IST time: {current_time}")
-    print(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
-    print(f"Clock-out time range: {clock_out_start} - {clock_out_end}")
+    logging.info(f"Current IST time: {current_time}")
+    logging.info(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
+    logging.info(f"Clock-out time range: {clock_out_start} - {clock_out_end}")
 
     # Check if today is a leave day or Sunday
     leave = os.getenv('LEAVE', 'false').lower() == 'true'
     if leave or now.weekday() == 6:  # 6 represents Sunday
-        print("Today is a leave day or Sunday. No clock-in required.")
+        logging.info("Today is a leave day or Sunday. No clock-in required.")
         return
     
     # Random delay within the time range
     if clock_in_start <= current_time <= clock_in_end:
         delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
-        print(f"Waiting for {delay // 60} minutes before clocking in.")
+        logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
         time.sleep(delay)
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920x1080')
-
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
-        
-        driver.get('https://rochem.darwinbox.in/user/login')
-        
-        # Perform login
-        driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
-        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
-        driver.find_element(By.ID, "login-submit").click()
-        
-        time.sleep(2)  # Wait for login to complete
-        print(f"Logging-in successful.")
-        clock_in_or_out("clockin", driver)
-        driver.quit()
+        clock_in_or_out("clockin")
+    
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 1) * 60  # Random delay between 0 and 30 minutes
-        print(f"Waiting for {delay // 60} minutes before clocking out.")
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920x1080')
-
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
-        
-        driver.get('https://rochem.darwinbox.in/user/login')
-        
-        # Perform login
-        driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
-        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
-        driver.find_element(By.ID, "login-submit").click()
-        
-        time.sleep(2)  # Wait for login to complete
-        print(f"Logging-in successful.")
-        clock_in_or_out("clockout", driver)
-        driver.quit()
+        clock_in_or_out("clockout")
+    
     else:
-        print("Current time is not within the clock-in/out range.")
+        logging.info("Current time is not within the clock-in/out range.")
 
 if __name__ == "__main__":
     main()
