@@ -42,12 +42,12 @@ def clock_in_or_out(action):
         top_bar = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
         # Click on the profile icon to reveal the clock-in/out button if necessary
-        profile_icon = top_bar.find_element(By.XPATH, './/div/header/div/div[3]/ul/li[2]/a')
+        profile_icon = top_bar.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
         profile_icon.click()
         time.sleep(2)  # Wait for the menu to open
 
         # Perform clock in/out
-        clock_button = top_bar.find_element(By.XPATH, './/div/header/div/div[3]/ul/li[2]/span/img')
+        clock_button = top_bar.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
         clock_button.click()
         
         logging.info(f"{action.capitalize()} successful.")
