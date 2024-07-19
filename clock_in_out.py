@@ -14,30 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Function to switch to iframe if necessary
-def switch_to_iframe(driver):
-    iframes = driver.find_elements(By.TAG_NAME, 'iframe')
-    for index, iframe in enumerate(iframes):
-        driver.switch_to.frame(iframe)
-        try:
-            # Log which iframe is being checked
-            logging.info(f"Checking iframe {index + 1}/{len(iframes)}")
-            # Replace with the correct XPath or CSS selector for the clock button
-            if driver.find_element(By.XPATH, 'correct_xpath_here'):  
-                logging.info("Clock button found inside iframe.")
-                return True
-        except:
-            driver.switch_to.default_content()
-    return False
-
-# Function to find the clock button
-def find_clock_button(driver):
-    elements = driver.find_elements(By.TAG_NAME, 'img')  # Adjust the tag to your needs
-    for element in elements:
-        if 'clockin' in element.get_attribute('src') or 'clockout' in element.get_attribute('src'):  # Adjust based on image src or another attribute
-            return element
-    return None
-
 # Function to perform clock in/out
 def clock_in_or_out(action):
     options = Options()
@@ -65,21 +41,23 @@ def clock_in_or_out(action):
         # Wait for the top bar to be visible
         wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
-        # Switch to iframe if necessary
-        if not switch_to_iframe(driver):
-            logging.info("Clock button not found in iframes. Trying to locate directly.")
-            driver.switch_to.default_content()
-        
-        # Try finding the clock button with various methods
-        clock_button = find_clock_button(driver)
-        if not clock_button:
-            clock_button = driver.execute_script("return document.querySelector('img[src*=\"clockin\"]');")  # Update with correct query
+        # Try finding the clock button using JavaScript
+        clock_button = driver.execute_script("""
+            var imgs = document.getElementsByTagName('img');
+            for (var i = 0; i < imgs.length; i++) {
+                if (imgs[i].src.includes('clockin') || imgs[i].src.includes('clockout')) {
+                    return imgs[i];
+                }
+            }
+            return null;
+        """)
         
         if not clock_button:
             logging.error("Could not find the clock button.")
             return
-        
-        clock_button.click()
+
+        # Click the clock button using JavaScript
+        driver.execute_script("arguments[0].click();", clock_button)
         
         logging.info(f"{action.capitalize()} successful.")
     except Exception as e:
