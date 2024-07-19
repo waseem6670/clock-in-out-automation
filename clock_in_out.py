@@ -38,12 +38,16 @@ def clock_in_or_out(action):
         logging.info(f"Logging-in successful.")
         time.sleep(10)  # Wait for 10 seconds after successful login
         
-        # Wait for the menu button to be clickable
-        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'))).click()
+        # Wait for the top bar to be visible and interact with it
+        top_bar = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
+        
+        # Click on the profile icon to reveal the clock-in/out button if necessary
+        profile_icon = top_bar.find_element(By.XPATH, './/div/header/div/div[3]/ul/li[2]/a')
+        profile_icon.click()
         time.sleep(2)  # Wait for the menu to open
 
         # Perform clock in/out
-        clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
+        clock_button = top_bar.find_element(By.XPATH, './/div/header/div/div[3]/ul/li[2]/span/img')
         clock_button.click()
         
         logging.info(f"{action.capitalize()} successful.")
