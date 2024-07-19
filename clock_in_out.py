@@ -21,9 +21,10 @@ def locate_clock_image():
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
-    
+
     try:
         driver.get('https://rochem.darwinbox.in/user/login')
+        logging.info("Opened login page.")
         
         # Perform login
         driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
@@ -31,7 +32,7 @@ def locate_clock_image():
         driver.find_element(By.ID, "login-submit").click()
         
         logging.info("Logging-in successful.")
-
+        
         # Wait and navigate to the dashboard
         WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH, '//a[@href="/dashboard"]'))
@@ -39,7 +40,7 @@ def locate_clock_image():
         
         logging.info("Navigated to the dashboard.")
         
-        # Wait and locate clock button by image src
+        # Wait for the clock image to be visible
         try:
             clock_image = WebDriverWait(driver, 60).until(
                 EC.presence_of_element_located((By.XPATH, '//img[contains(@src, "Clock.svg")]'))
@@ -50,6 +51,11 @@ def locate_clock_image():
             with open('page_source.html', 'w') as f:
                 f.write(driver.page_source)
         
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        with open('page_source.html', 'w') as f:
+            f.write(driver.page_source)
+    
     finally:
         driver.quit()
 
