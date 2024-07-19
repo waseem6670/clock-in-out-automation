@@ -17,11 +17,14 @@ logging.basicConfig(level=logging.INFO)
 # Function to switch to iframe if necessary
 def switch_to_iframe(driver):
     iframes = driver.find_elements(By.TAG_NAME, 'iframe')
-    for iframe in iframes:
+    for index, iframe in enumerate(iframes):
         driver.switch_to.frame(iframe)
         try:
+            # Log which iframe is being checked
+            logging.info(f"Checking iframe {index + 1}/{len(iframes)}")
             # Replace with the correct XPath or CSS selector for the clock button
             if driver.find_element(By.XPATH, 'correct_xpath_here'):  
+                logging.info("Clock button found inside iframe.")
                 return True
         except:
             driver.switch_to.default_content()
@@ -64,8 +67,8 @@ def clock_in_or_out(action):
         
         # Switch to iframe if necessary
         if not switch_to_iframe(driver):
-            logging.error("Could not find clock button within iframes.")
-            return
+            logging.info("Clock button not found in iframes. Trying to locate directly.")
+            driver.switch_to.default_content()
         
         # Try finding the clock button with various methods
         clock_button = find_clock_button(driver)
@@ -112,7 +115,7 @@ def main():
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
