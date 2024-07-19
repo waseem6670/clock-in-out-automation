@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -28,16 +30,16 @@ def clock_in_or_out(action):
         driver.get('https://rochem.darwinbox.in/user/login')
 
         # Perform login
-        driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
+        wait = WebDriverWait(driver, 20)
+        wait.until(EC.presence_of_element_located((By.ID, "UserLogin_username"))).send_keys(os.getenv('EMAIL'))
         driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
         driver.find_element(By.ID, "login-submit").click()
         
         logging.info(f"Logging-in successful.")
         time.sleep(10)  # Wait for 10 seconds after successful login
         
-        # Open the ribbon menu if necessary
-        menu_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/a')
-        menu_button.click()
+        # Wait for the menu button to be clickable
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img'))).click()
         time.sleep(2)  # Wait for the menu to open
 
         # Perform clock in/out
@@ -78,7 +80,7 @@ def main():
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
