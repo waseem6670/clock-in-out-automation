@@ -34,43 +34,45 @@ def clock_in_or_out(action):
         driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
         driver.find_element(By.ID, "login-submit").click()
         
-        logging.info(f"Logging-in successful.")
+        logging.info("Logging-in successful.")
         time.sleep(10)  # Wait for 10 seconds after successful login
         
         # Wait for the top bar to be visible
         wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
-        # Attempt to find the clock button using multiple methods
+        # Debug: Print page source and all elements for inspection
+        with open('C:\Users\Wasim Raja\Documents/page_source.html', 'w') as file:
+            file.write(driver.page_source)
+
+        logging.info("Page source saved as 'page_source.html'. Check this file to verify element structure.")
+        
+        # Attempt to find the clock button using various methods
         clock_button = None
         
-        # Method 1: Find by image source
+        # Method 1: JavaScript to find the clock button
         clock_button = driver.execute_script("""
             var imgs = document.getElementsByTagName('img');
             for (var i = 0; i < imgs.length; i++) {
-                if (imgs[i].src.includes('clockin') || imgs[i].src.includes('clockout')) {
+                if (imgs[i].src.includes('clock')) {
                     return imgs[i];
                 }
             }
             return null;
         """)
         
-        # Method 2: Try finding by XPath or CSS Selector (Modify the selector based on your page structure)
+        # If not found, try by text or specific classes/ids
         if not clock_button:
             try:
-                clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//img[contains(@src, "clock")]')
+                clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//a[contains(text(), "Clock")]')
             except Exception as e:
-                logging.error(f"XPath method failed: {e}")
+                logging.error(f"Text method failed: {e}")
 
-        # Method 3: Check if clock button is hidden in a dropdown or additional tab
+        # If not found, try a different CSS selector approach
         if not clock_button:
             try:
-                clock_button = driver.execute_script("""
-                    var clockin = document.querySelector('a[href*="clockin"]');
-                    var clockout = document.querySelector('a[href*="clockout"]');
-                    return clockin || clockout;
-                """)
+                clock_button = driver.find_element(By.CSS_SELECTOR, 'div.clock-button-class')  # Adjust class name
             except Exception as e:
-                logging.error(f"JavaScript query method failed: {e}")
+                logging.error(f"CSS selector method failed: {e}")
 
         if not clock_button:
             logging.error("Could not find the clock button.")
@@ -113,7 +115,7 @@ def main():
         clock_in_or_out("clockin")
     
     elif clock_out_start <= current_time <= clock_out_end:
-        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        delay = random.randint(0, 1) * 60  # Random delay between 0 and 30 minutes
         logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
         time.sleep(delay)
         clock_in_or_out("clockout")
