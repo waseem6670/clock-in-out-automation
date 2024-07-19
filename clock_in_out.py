@@ -38,16 +38,23 @@ def clock_in_or_out(action):
         logging.info(f"Logging-in successful.")
         time.sleep(10)  # Wait for 10 seconds after successful login
         
-        # Wait for the top bar to be visible and interact with it
-        top_bar = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
+        # Wait for the top bar to be visible
+        wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
-        # Click on the profile icon to reveal the clock-in/out button if necessary
-        profile_icon = top_bar.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
-        profile_icon.click()
-        time.sleep(2)  # Wait for the menu to open
-
-        # Perform clock in/out
-        clock_button = top_bar.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//div/header/div/div[3]/ul/li[2]/span/img')
+        # Switch to iframe if necessary
+        if not switch_to_iframe(driver):
+            logging.error("Could not find clock button within iframes.")
+            return
+        
+        # Try finding the clock button with various methods
+        clock_button = find_clock_button(driver)
+        if not clock_button:
+            clock_button = find_element_with_js(driver, "return document.querySelector('img[src*=\"clockin\"]');")  # Update with correct query
+        
+        if not clock_button:
+            logging.error("Could not find the clock button.")
+            return
+        
         clock_button.click()
         
         logging.info(f"{action.capitalize()} successful.")
