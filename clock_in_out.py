@@ -21,6 +21,16 @@ def locate_clock_button():
         driver.get('https://rochem.darwinbox.in/dashboard')
         print("Opened dashboard page.")
         
+        # Debug: Save page source to check content
+        with open('page_source.html', 'w') as file:
+            file.write(driver.page_source)
+        print("Page source saved as 'page_source.html'. Check this file to verify element structure.")
+
+        # Wait for the page to load properly
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, '//div/header'))
+        )
+
         # Locate the clock button using the correct XPath
         clock_button_xpath = '//div/header//div//div[@class="section__right"]//ul//li[@class="clockinout_btn prevent-close"]//span//img[contains(@src, "Clock.svg")]'
         
