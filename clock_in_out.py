@@ -14,7 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Function to perform clock in/out
 def clock_in_or_out(action):
     options = Options()
     options.add_argument('--headless')
@@ -41,7 +40,10 @@ def clock_in_or_out(action):
         # Wait for the top bar to be visible
         wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
-        # Try finding the clock button using JavaScript
+        # Attempt to find the clock button using multiple methods
+        clock_button = None
+        
+        # Method 1: Find by image source
         clock_button = driver.execute_script("""
             var imgs = document.getElementsByTagName('img');
             for (var i = 0; i < imgs.length; i++) {
@@ -52,6 +54,24 @@ def clock_in_or_out(action):
             return null;
         """)
         
+        # Method 2: Try finding by XPath or CSS Selector (Modify the selector based on your page structure)
+        if not clock_button:
+            try:
+                clock_button = driver.find_element(By.XPATH, '//*[@id="dbox-top-bar"]//img[contains(@src, "clock")]')
+            except Exception as e:
+                logging.error(f"XPath method failed: {e}")
+
+        # Method 3: Check if clock button is hidden in a dropdown or additional tab
+        if not clock_button:
+            try:
+                clock_button = driver.execute_script("""
+                    var clockin = document.querySelector('a[href*="clockin"]');
+                    var clockout = document.querySelector('a[href*="clockout"]');
+                    return clockin || clockout;
+                """)
+            except Exception as e:
+                logging.error(f"JavaScript query method failed: {e}")
+
         if not clock_button:
             logging.error("Could not find the clock button.")
             return
