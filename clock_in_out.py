@@ -1,17 +1,12 @@
-import os
-import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-
-def locate_clock_image():
+def locate_clock_button():
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -23,41 +18,23 @@ def locate_clock_image():
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        driver.get('https://rochem.darwinbox.in/user/login')
-        logging.info("Opened login page.")
+        driver.get('https://rochem.darwinbox.in/dashboard')
+        print("Opened dashboard page.")
         
-        # Perform login
-        driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
-        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
-        driver.find_element(By.ID, "login-submit").click()
+        # Locate the clock button using the correct XPath
+        clock_button_xpath = '//div/header//div//div[@class="section__right"]//ul//li[@class="clockinout_btn prevent-close"]//span//img[contains(@src, "Clock.svg")]'
         
-        logging.info("Logging-in successful.")
-        
-        # Wait and navigate to the dashboard
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, '//a[@href="/dashboard"]'))
-        ).click()
-        
-        logging.info("Navigated to the dashboard.")
-        
-        # Wait for the clock image to be visible
-        try:
-            clock_image = WebDriverWait(driver, 60).until(
-                EC.presence_of_element_located((By.XPATH, '//img[contains(@src, "Clock.svg")]'))
-            )
-            logging.info("Clock image located successfully.")
-        except Exception as e:
-            logging.error(f"Clock image not found: {e}")
-            with open('page_source.html', 'w') as f:
-                f.write(driver.page_source)
-        
+        clock_button = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, clock_button_xpath))
+        )
+
+        print("Clock button located successfully.")
+    
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        with open('page_source.html', 'w') as f:
-            f.write(driver.page_source)
+        print(f"An error occurred: {e}")
     
     finally:
         driver.quit()
 
 if __name__ == "__main__":
-    locate_clock_image()
+    locate_clock_button()
