@@ -41,7 +41,7 @@ def clock_in_or_out(action):
         wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
         # Debug: Print page source and all elements for inspection
-        with open('C:\Users\Wasim Raja\Documents/page_source.html', 'w') as file:
+        with open('page_source.html', 'w') as file:
             file.write(driver.page_source)
 
         logging.info("Page source saved as 'page_source.html'. Check this file to verify element structure.")
