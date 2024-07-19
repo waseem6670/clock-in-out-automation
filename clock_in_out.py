@@ -33,7 +33,7 @@ def locate_clock_image():
         logging.info("Logging-in successful.")
 
         # Wait and navigate to the dashboard
-        WebDriverWait(driver, 20).until(
+        WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH, '//a[@href="/dashboard"]'))
         ).click()
         
@@ -41,12 +41,14 @@ def locate_clock_image():
         
         # Wait and locate clock button by image src
         try:
-            clock_image = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, '//img[@src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]'))
+            clock_image = WebDriverWait(driver, 60).until(
+                EC.presence_of_element_located((By.XPATH, '//img[contains(@src, "Clock.svg")]'))
             )
             logging.info("Clock image located successfully.")
         except Exception as e:
             logging.error(f"Clock image not found: {e}")
+            with open('page_source.html', 'w') as f:
+                f.write(driver.page_source)
         
     finally:
         driver.quit()
