@@ -1,12 +1,30 @@
+import os
+from datetime import datetime, timedelta
+import random
+import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-def locate_clock_button():
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
+# Function to find the clock button in the header
+def find_clock_button_in_header(driver):
+    try:
+        # Adjust the selector to match the clock button in the header
+        return driver.find_element(By.XPATH, 'correct_xpath_to_clock_button')  # Replace with correct XPath or CSS selector
+    except Exception as e:
+        logging.error(f"Clock button not found: {e}")
+        return None
+
+# Function to perform clock in/out
+def clock_in_or_out(action):
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -16,35 +34,70 @@ def locate_clock_button():
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
-
+    
     try:
-        driver.get('https://rochem.darwinbox.in/dashboard')
-        print("Opened dashboard page.")
+        driver.get('https://rochem.darwinbox.in/user/login')
+
+        # Perform login
+        wait = WebDriverWait(driver, 20)
+        wait.until(EC.presence_of_element_located((By.ID, "UserLogin_username"))).send_keys(os.getenv('EMAIL'))
+        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
+        driver.find_element(By.ID, "login-submit").click()
         
-        # Debug: Save page source to check content
-        with open('page_source.html', 'w') as file:
-            file.write(driver.page_source)
-        print("Page source saved as 'page_source.html'. Check this file to verify element structure.")
-
-        # Wait for the page to load properly
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, '//div/header'))
-        )
-
-        # Locate the clock button using the correct XPath
-        clock_button_xpath = '//div/header//div//div[@class="section__right"]//ul//li[@class="clockinout_btn prevent-close"]//span//img[contains(@src, "Clock.svg")]'
+        logging.info("Logging in successful.")
+        time.sleep(10)  # Wait for 10 seconds after successful login
         
-        clock_button = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, clock_button_xpath))
-        )
-
-        print("Clock button located successfully.")
-    
+        # Wait for the top bar to be visible where the clock button is located
+        wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
+        
+        # Find the clock button in the header
+        clock_button = find_clock_button_in_header(driver)
+        if not clock_button:
+            logging.error("Could not find the clock button.")
+            return
+        
+        clock_button.click()
+        logging.info(f"{action.capitalize()} successful.")
     except Exception as e:
-        print(f"An error occurred: {e}")
-    
+        logging.error(f"An error occurred during {action}: {e}")
     finally:
         driver.quit()
 
+def main():
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
+    current_time = now.strftime("%H:%M")
+    
+    # Define clock-in and clock-out time ranges
+    clock_in_start = "08:30"
+    clock_in_end = "09:00"
+    clock_out_start = "17:30"
+    clock_out_end = "23:00"
+
+    logging.info(f"Current IST time: {current_time}")
+    logging.info(f"Clock-in time range: {clock_in_start} - {clock_in_end}")
+    logging.info(f"Clock-out time range: {clock_out_start} - {clock_out_end}")
+
+    # Check if today is a leave day or Sunday
+    leave = os.getenv('LEAVE', 'false').lower() == 'true'
+    if leave or now.weekday() == 6:  # 6 represents Sunday
+        logging.info("Today is a leave day or Sunday. No clock-in required.")
+        return
+    
+    # Random delay within the time range
+    if clock_in_start <= current_time <= clock_in_end:
+        delay = random.randint(0, 30) * 60  # Random delay between 0 and 30 minutes
+        logging.info(f"Waiting for {delay // 60} minutes before clocking in.")
+        time.sleep(delay)
+        clock_in_or_out("clockin")
+    
+    elif clock_out_start <= current_time <= clock_out_end:
+        delay = random.randint(0, 3) * 60  # Random delay between 0 and 30 minutes
+        logging.info(f"Waiting for {delay // 60} minutes before clocking out.")
+        time.sleep(delay)
+        clock_in_or_out("clockout")
+    
+    else:
+        logging.info("Current time is not within the clock-in/out range.")
+
 if __name__ == "__main__":
-    locate_clock_button()
+    main()
