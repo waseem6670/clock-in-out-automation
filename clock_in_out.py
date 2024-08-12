@@ -1,3 +1,4 @@
+import os  # Add this line to import the os module
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -30,13 +31,4 @@ def clock_in_or_out():
         wait.until(EC.visibility_of_element_located((By.XPATH, '//header')))
 
         # Find the clock button in the header and click it
-        clock_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//header//img[@src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]')))
-        clock_button.click()
-
-        print("Clock-in/out successful.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        driver.quit()
-
-clock_in_or_out()
+        clock_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//header//img
