@@ -14,6 +14,8 @@ def clock_in_or_out():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    options.add_argument('--disable-setuid-sandbox')
+    options.add_argument('--remote-debugging-port=9222')
     options.add_argument('--window-size=1920x1080')
 
     service = Service(ChromeDriverManager().install())
@@ -33,7 +35,7 @@ def clock_in_or_out():
 
         # Find the clock button in the header and click it
         clock_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//header//img[@src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]')))
-      
+        
 
         print("Clock-in/out successful.")
     except Exception as e:
