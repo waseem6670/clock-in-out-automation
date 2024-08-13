@@ -9,11 +9,15 @@ import os
 
 def clock_in_or_out():
     options = Options()
-    # Uncomment if you want to run in headless mode
+    # Uncomment the line below to run in headless mode
     # options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')  # Disable GPU if running in Docker or CI/CD
     options.add_argument('--window-size=1920x1080')
+
+    # Enable logging for troubleshooting
+    options.log.level = "trace"  # Enables detailed logging
 
     service = FirefoxService(GeckoDriverManager().install())
     driver = webdriver.Firefox(service=service, options=options)
