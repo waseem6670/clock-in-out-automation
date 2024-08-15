@@ -1,47 +1,41 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
-from webdriver_manager.firefox import GeckoDriverManager
-import os
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
-def clock_in_or_out():
+# Function to login and list actionable elements
+def list_actionable_elements():
     options = Options()
-    # Uncomment the line below to run in headless mode
-    # options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')  # Disable GPU if running in Docker or CI/CD
+    options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920x1080')
 
-    # Enable logging for troubleshooting
-    options.log.level = "trace"  # Enables detailed logging
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    # Go to Darwinbox login page
+    driver.get('https://rochem.darwinbox.in/user/login')
+    
+    # Perform login
+    driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
+    driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
+    driver.find_element(By.ID, "login-submit").click()
+    
+    # Give time for login to complete
+    driver.implicitly_wait(10)
+    
+    # List all actionable elements (buttons, links, images with onclick events)
+    print("Listing all actionable elements:")
+    
+    elements = driver.find_elements(By.XPATH, "//*[@href] | //*[@onclick] | //button | //input[@type='button'] | //img[@src]")
+    for i, element in enumerate(elements, start=1):
+        print(f"{i}: Tag: {element.tag_name}, Text: {element.text}, Attributes: {element.get_attribute('outerHTML')[:100]}...")
 
-    service = FirefoxService(GeckoDriverManager().install())
-    driver = webdriver.Firefox(service=service, options=options)
+    driver.quit()
 
-    try:
-        driver.get('https://rochem.darwinbox.in/user/login')
-
-        # Perform login
-        wait = WebDriverWait(driver, 20)
-        wait.until(EC.presence_of_element_located((By.ID, "UserLogin_username"))).send_keys(os.getenv('EMAIL'))
-        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
-        driver.find_element(By.ID, "login-submit").click()
-
-        # Wait until the header is visible
-        wait.until(EC.visibility_of_element_located((By.XPATH, '//header')))
-
-        # Find the clock button in the header and click it
-        clock_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//header//img[@src="/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg"]')))
-       
-
-        print("Clock-in/out successful.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        driver.quit()
-
-clock_in_or_out()
+if __name__ == "__main__":
+    list_actionable_elements()
