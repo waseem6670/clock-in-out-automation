@@ -1,41 +1,43 @@
-import os
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+import time
 
-# Function to login and list actionable elements
-def list_actionable_elements():
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920x1080')
+# Set up Chrome options to run with a visible browser window
+chrome_options = Options()
+# chrome_options.add_argument("--headless")  # Comment this line out to disable headless mode
+chrome_options.add_argument("--start-maximized")  # Optionally start maximized
 
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    
-    # Go to Darwinbox login page
-    driver.get('https://rochem.darwinbox.in/user/login')
-    
-    # Perform login
-    driver.find_element(By.ID, "UserLogin_username").send_keys(os.getenv('EMAIL'))
-    driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
-    driver.find_element(By.ID, "login-submit").click()
-    
-    # Give time for login to complete
-    driver.implicitly_wait(10)
-    
-    # List all actionable elements (buttons, links, images with onclick events)
-    print("Listing all actionable elements:")
-    
-    elements = driver.find_elements(By.XPATH, "//*[@href] | //*[@onclick] | //button | //input[@type='button'] | //img[@src]")
-    for i, element in enumerate(elements, start=1):
-        print(f"{i}: Tag: {element.tag_name}, Text: {element.text}, Attributes: {element.get_attribute('outerHTML')[:100]}...")
+# Specify the path to the chromedriver executable
+service = Service('/path/to/chromedriver')
 
-    driver.quit()
+# Set up the WebDriver
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-if __name__ == "__main__":
-    list_actionable_elements()
+# Navigate to the Darwinbox login page
+driver.get("https://your-darwinbox-url.com")
+
+# Perform login
+username = driver.find_element(By.ID, "username")
+password = driver.find_element(By.ID, "password")
+login_button = driver.find_element(By.ID, "loginButton")
+
+username.send_keys("your_username")
+password.send_keys("your_password")
+login_button.click()
+
+# Add a delay to ensure the page has loaded completely
+time.sleep(5)
+
+# Attempt to find the clock-in/clock-out button
+clock_button = driver.find_element(By.CSS_SELECTOR, "img[src='/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg']")
+
+# Check if the button was found and interact with it
+if clock_button:
+    clock_button.click()
+else:
+    print("Clock-in/clock-out button not found")
+
+# Optionally, close the browser
+driver.quit()
