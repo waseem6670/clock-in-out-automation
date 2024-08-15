@@ -26,6 +26,7 @@ login_button = driver.find_element(By.ID, "loginButton")
 username.send_keys("your_username")
 password.send_keys("your_password")
 login_button.click()
+print("Logged in sucessfully")
 
 # Add a delay to ensure the page has loaded completely
 time.sleep(5)
