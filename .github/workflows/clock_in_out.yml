@@ -1,33 +1,37 @@
-name: Clock In/Out Automation
+name: CI
 
 on:
-  schedule:
-    - cron: '0 3 * * 0-6'  # Runs daily at 03:00 UTC (08:30 IST)
-    - cron: '30 12 * * 0-6' # Runs daily at 12:30 UTC (18:00 IST)
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  clock_in_out:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v4  # Updated to v4 for Node.js 20 compatibility
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Set up Python
-      uses: actions/setup-python@v4  # Updated to v4 for Node.js 20 compatibility
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: 3.8
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install selenium webdriver-manager
+        pip install selenium
 
-    - name: Run clock in/out script
-      env:
-        EMAIL: ${{ secrets.EMAIL }}
-        PASSWORD: ${{ secrets.PASSWORD }}
-        LEAVE: ${{ secrets.LEAVE }}
+    - name: Install Chromedriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y unzip xvfb libxi6 libgconf-2-4
+        wget -N https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip -d $HOME/chromedriver
+        rm chromedriver_linux64.zip
+        echo "$HOME/chromedriver" >> $GITHUB_PATH
+
+    - name: Run Python script
       run: |
         python clock_in_out.py
