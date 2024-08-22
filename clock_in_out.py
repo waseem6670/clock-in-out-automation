@@ -1,3 +1,19 @@
+import os
+from datetime import datetime, timedelta
+import random
+import time
+import logging
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
 # Function to find the clock button with additional debugging
 def find_clock_button(driver):
     # Log the page title to confirm we're on the correct page
