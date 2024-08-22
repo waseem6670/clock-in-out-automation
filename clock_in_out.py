@@ -1,38 +1,43 @@
-import os
-from datetime import datetime, timedelta
-import logging
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-
-# Function to find the clock button
+# Function to find the clock button with additional debugging
 def find_clock_button(driver):
-    elements = driver.find_elements(By.TAG_NAME, 'img')  # Adjust the tag to your needs
+    # Log the page title to confirm we're on the correct page
+    logging.info(f"Page title: {driver.title}")
+
+    # Attempt to find the clock button by inspecting the header
+    try:
+        # This assumes the header contains the button with an 'img' tag and a unique 'src' attribute
+        clock_button = driver.find_element(By.CSS_SELECTOR, "header img[src*='clock']")
+        if clock_button:
+            logging.info("Clock button found using CSS selector.")
+            return clock_button
+    except Exception as e:
+        logging.warning(f"Clock button not found with CSS selector: {e}")
+
+    # If the above fails, attempt to find the button by iterating through images
+    elements = driver.find_elements(By.TAG_NAME, 'img')
+    logging.info(f"Found {len(elements)} image elements. Attempting to locate clock button...")
+
     for element in elements:
-        if 'clockin' in element.get_attribute('src') or 'clockout' in element.get_attribute('src'):  # Adjust based on image src or another attribute
+        src = element.get_attribute('src')
+        logging.info(f"Inspecting image with src: {src}")
+        if 'clockin' in src or 'clockout' in src:
+            logging.info("Clock button found by inspecting image elements.")
             return element
+
+    logging.error("Clock button not found after inspecting all image elements.")
     return None
 
 # Function to perform clock in/out
 def clock_in_or_out(action):
     options = Options()
-    options.add_argument('--headless')  # Re-enable headless mode
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920x1080')
-    options.add_argument('--remote-debugging-port=9222')  # Ensure DevTools port is available
     
-    # Specify Chrome binary location if necessary
-    # options.binary_location = "/path/to/chrome"  # Replace with the actual path to your Chrome executable
-
+    # Optional: Uncomment this line to see the browser
+    # options.add_argument('--headless')
+    
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     
@@ -44,22 +49,21 @@ def clock_in_or_out(action):
         wait.until(EC.presence_of_element_located((By.ID, "UserLogin_username"))).send_keys(os.getenv('EMAIL'))
         driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
         driver.find_element(By.ID, "login-submit").click()
-        
+
         logging.info("Logging-in successful.")
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
-        
+        time.sleep(10)  # Wait for 10 seconds after successful login
+
+        # Ensure the page is fully loaded and the header is visible
+        wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "header")))
+
         # Try finding the clock button
         clock_button = find_clock_button(driver)
         if not clock_button:
-            clock_button = driver.execute_script("return document.querySelector('img[src*=\"clockin\"]');")  # Update with correct query
-        
-        if not clock_button:
-            logging.error("Could not find the clock button.")
+            logging.error("Could not find the clock button. Aborting.")
             return
         
         clock_button.click()
         logging.info(f"{action.capitalize()} successful.")
-        
     except Exception as e:
         logging.error(f"An error occurred during {action}: {e}")
     finally:
@@ -68,7 +72,7 @@ def clock_in_or_out(action):
 def main():
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
     current_time = now.strftime("%H:%M")
-    
+
     logging.info(f"Current IST time: {current_time}")
 
     # Check if today is a leave day or Sunday
@@ -76,7 +80,7 @@ def main():
     if leave or now.weekday() == 6:  # 6 represents Sunday
         logging.info("Today is a leave day or Sunday. No clock-in required.")
         return
-    
+
     # Perform clock-in or clock-out
     clock_in_or_out("clockin")
     clock_in_or_out("clockout")
