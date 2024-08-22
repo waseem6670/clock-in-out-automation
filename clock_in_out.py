@@ -27,8 +27,8 @@ def clock_in_or_out(action):
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920x1080')
-    # options.add_argument('--headless')  # Uncomment this if you want to run in headless mode
-
+    options.add_argument('--remote-debugging-port=9222')  # Ensure DevTools port is available
+    
     # Specify Chrome binary location if necessary
     # options.binary_location = "/path/to/chrome"  # Replace with the actual path to your Chrome executable
 
