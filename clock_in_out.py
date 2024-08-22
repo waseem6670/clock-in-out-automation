@@ -13,15 +13,24 @@ from selenium.webdriver.support import expected_conditions as EC
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Coordinates for the clock button (replace with actual values)
-CLOCKIN_X, CLOCKIN_Y = 927, 20  # Replace with actual clock-in button coordinates
-CLOCKOUT_X, CLOCKOUT_Y = 927, 20  # Replace with actual clock-out button coordinates
+# Coordinates to inspect (replace with your values)
+INSPECT_X, INSPECT_Y = 927, 20
 
-# Function to perform click at specific coordinates
-def click_at_coordinates(driver, x, y):
-    driver.execute_script(f"document.elementFromPoint({x}, {y}).click();")
+# Function to print element details at specific coordinates
+def print_element_details_at_coordinates(driver, x, y):
+    try:
+        element = driver.execute_script(f"return document.elementFromPoint({x}, {y});")
+        if element:
+            logging.info(f"Element found at ({x}, {y}):")
+            logging.info(f"Tag Name: {element.tag_name}")
+            logging.info(f"Attributes: {[f'{attr}: {element.get_attribute(attr)}' for attr in element.get_property('attributes')]}")
+            logging.info(f"Text: {element.text}")
+        else:
+            logging.info(f"No element found at ({x}, {y}).")
+    except Exception as e:
+        logging.error(f"An error occurred while fetching element details: {e}")
 
-# Function to perform clock in/out
+# Function to perform clock in/out (just as a placeholder)
 def clock_in_or_out(action):
     options = Options()
     options.add_argument('--headless')
@@ -48,16 +57,8 @@ def clock_in_or_out(action):
         # Wait for the top bar to be visible
         wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
         
-        # Click based on action
-        if action == "clockin":
-            # click_at_coordinates(driver, CLOCKIN_X, CLOCKIN_Y)
-            logging.info("Clock-in successful.")
-        elif action == "clockout":
-            # click_at_coordinates(driver, CLOCKOUT_X, CLOCKOUT_Y)
-            logging.info("Clock-out successful.")
-        else:
-            logging.error("Invalid action specified.")
-            return
+        # Print element details at specified coordinates
+        print_element_details_at_coordinates(driver, INSPECT_X, INSPECT_Y)
         
     except Exception as e:
         logging.error(f"An error occurred during {action}: {e}")
@@ -78,7 +79,6 @@ def main():
     
     # Perform clock-in or clock-out
     clock_in_or_out("clockin")
-    clock_in_or_out("clockout")
 
 if __name__ == "__main__":
     main()
