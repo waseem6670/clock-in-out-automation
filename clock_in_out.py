@@ -1,12 +1,12 @@
 import os
 from datetime import datetime, timedelta
 import logging
-import time  # Importing the time module
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options  # Corrected import statement
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -45,6 +45,10 @@ def clock_in_or_out(action):
             logging.info(f"Element found at (927, 20):")
             logging.info(f"Tag Name: {element.tag_name}")
             logging.info(f"Text: {element.text.strip()}")
+            
+            # Click on the element
+            driver.execute_script("arguments[0].click();", element)
+            logging.info("Click action performed on the element at the specified coordinates.")
         else:
             logging.error("No element found at the specified coordinates.")
     except Exception as e:
@@ -66,7 +70,7 @@ def main():
     
     # Perform clock-in or clock-out
     clock_in_or_out("clockin")
-    clock_in_or_out("clockout")
+    #clock_in_or_out("clockout")
 
 if __name__ == "__main__":
     main()
