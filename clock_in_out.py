@@ -1,39 +1,87 @@
+import os
+from datetime import datetime, timedelta
+import random
+import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
-import time
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-# Set up Chrome options to run with a visible browser window
-chrome_options = Options()
-# chrome_options.add_argument("--headless")  # Comment this line out to disable headless mode
-chrome_options.add_argument("--start-maximized")  # Optionally start maximized
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 
-# Set up the WebDriver
-driver = webdriver.Chrome(options=chrome_options)
+# Function to find the clock button
+def find_clock_button(driver):
+    elements = driver.find_elements(By.TAG_NAME, 'img')  # Adjust the tag to your needs
+    for element in elements:
+        if 'clockin' in element.get_attribute('src') or 'clockout' in element.get_attribute('src'):  # Adjust based on image src or another attribute
+            return element
+    return None
 
-# Navigate to the Darwinbox login page
-driver.get("https://your-darwinbox-url.com")
+# Function to perform clock in/out
+def clock_in_or_out(action):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920x1080')
 
-# Perform login
-username = driver.find_element(By.ID, "username")
-password = driver.find_element(By.ID, "password")
-login_button = driver.find_element(By.ID, "loginButton")
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    try:
+        driver.get('https://rochem.darwinbox.in/user/login')
 
-username.send_keys("your_username")
-password.send_keys("your_password")
-login_button.click()
+        # Perform login
+        wait = WebDriverWait(driver, 20)
+        wait.until(EC.presence_of_element_located((By.ID, "UserLogin_username"))).send_keys(os.getenv('EMAIL'))
+        driver.find_element(By.ID, "UserLogin_password").send_keys(os.getenv('PASSWORD'))
+        driver.find_element(By.ID, "login-submit").click()
+        
+        logging.info(f"Logging-in successful.")
+        time.sleep(10)  # Wait for 10 seconds after successful login
+        
+        # Wait for the top bar to be visible
+        wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
+        
+        # Try finding the clock button with various methods
+        clock_button = find_clock_button(driver)
+        if not clock_button:
+            clock_button = driver.execute_script("return document.querySelector('img[src*=\"clockin\"]');")  # Update with correct query
+        
+        if not clock_button:
+            logging.error("Could not find the clock button.")
+            return
+        
+        clock_button.click()
+        
+        logging.info(f"{action.capitalize()} successful.")
+    except Exception as e:
+        logging.error(f"An error occurred during {action}: {e}")
+    finally:
+        driver.quit()
 
-# Add a delay to ensure the page has loaded completely
-time.sleep(5)
+def main():
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)  # Convert to IST
+    current_time = now.strftime("%H:%M")
+    
+    logging.info(f"Current IST time: {current_time}")
 
-# Attempt to find the clock-in/clock-out button
-clock_button = driver.find_element(By.CSS_SELECTOR, "img[src='/ms/dboxuilibrary/assets/dboxuilib_dist/www/assets/images/Clock.svg']")
+    # Check if today is a leave day or Sunday
+    leave = os.getenv('LEAVE', 'false').lower() == 'true'
+    if leave or now.weekday() == 6:  # 6 represents Sunday
+        logging.info("Today is a leave day or Sunday. No clock-in required.")
+        return
+    
+    # Perform clock-in or clock-out
+    clock_in_or_out("clockin")
+    clock_in_or_out("clockout")
 
-# Check if the button was found and interact with it
-if clock_button:
-    clock_button.click()
-else:
-    print("Clock-in/clock-out button not found")
+if __name__ == "__main__":
+    main()
 
-# Optionally, close the browser
-driver.quit()
