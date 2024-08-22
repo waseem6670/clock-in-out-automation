@@ -23,7 +23,19 @@ def print_element_details_at_coordinates(driver, x, y):
         if element:
             logging.info(f"Element found at ({x}, {y}):")
             logging.info(f"Tag Name: {element.tag_name}")
-            logging.info(f"Attributes: {[f'{attr}: {element.get_attribute(attr)}' for attr in element.get_property('attributes')]}")
+            
+            # Safely log attributes
+            attributes = element.get_property('attributes')
+            if attributes:
+                attributes_info = []
+                for attr in attributes:
+                    attr_name = attr['name']
+                    attr_value = attr['value']
+                    attributes_info.append(f'{attr_name}: {attr_value}')
+                logging.info(f"Attributes: {attributes_info}")
+            else:
+                logging.info("No attributes found.")
+            
             logging.info(f"Text: {element.text}")
         else:
             logging.info(f"No element found at ({x}, {y}).")
