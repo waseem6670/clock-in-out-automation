@@ -25,7 +25,7 @@ def find_clock_button(driver):
 # Function to perform clock in/out
 def clock_in_or_out(action):
     options = Options()
-    options.add_argument('--headless')
+# options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
