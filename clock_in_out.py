@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 logging.basicConfig(level=logging.INFO)
 
 # Coordinates to inspect (replace with your values)
-INSPECT_X, INSPECT_Y = 927, 20
+INSPECT_X, INSPECT_Y = 922, 20
 
 # Function to print element details at specific coordinates
 def print_element_details_at_coordinates(driver, x, y):
