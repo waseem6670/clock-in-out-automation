@@ -1,49 +1,33 @@
-name: CI
+name: Clock In/Out Automation
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  schedule:
+    - cron: '0 3 * * 0-6'  # Runs daily at 03:00 UTC (08:30 IST)
+    - cron: '30 12 * * 0-6' # Runs daily at 12:30 UTC (18:00 IST)
+  workflow_dispatch:
 
 jobs:
-  test:
+  clock_in_out:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Check out repository
+      uses: actions/checkout@v4  # Updated to v4 for Node.js 20 compatibility
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4  # Updated to v4 for Node.js 20 compatibility
       with:
-        python-version: 3.8
+        python-version: '3.8'
 
     - name: Install dependencies
       run: |
-        pip install selenium
+        python -m pip install --upgrade pip
+        pip install selenium webdriver-manager
 
-    - name: Install Chrome and ChromeDriver
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y unzip wget curl
-
-        # Install Google Chrome
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-
-        # Get the version of installed Chrome
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-        CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
-        
-        # Download and install the correct version of ChromeDriver
-        wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-        unzip chromedriver_linux64.zip -d $HOME/chromedriver
-        rm chromedriver_linux64.zip
-        echo "$HOME/chromedriver" >> $GITHUB_PATH
-
-    - name: Run Python script
+    - name: Run clock in/out script
+      env:
+        EMAIL: ${{ secrets.EMAIL }}
+        PASSWORD: ${{ secrets.PASSWORD }}
+        LEAVE: ${{ secrets.LEAVE }}
       run: |
         python clock_in_out.py
