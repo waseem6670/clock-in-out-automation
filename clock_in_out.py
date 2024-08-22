@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta
-import time
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -13,36 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Coordinates to inspect (replace with your values)
-INSPECT_X, INSPECT_Y = 927, 20
-
-# Function to print element details at specific coordinates
-def print_element_details_at_coordinates(driver, x, y):
-    try:
-        element = driver.execute_script(f"return document.elementFromPoint({x}, {y});")
-        if element:
-            logging.info(f"Element found at ({x}, {y}):")
-            logging.info(f"Tag Name: {element.tag_name}")
-            
-            # Safely log attributes
-            attributes = element.get_property('attributes')
-            if attributes:
-                attributes_info = []
-                for attr in attributes:
-                    attr_name = attr['name']
-                    attr_value = attr['value']
-                    attributes_info.append(f'{attr_name}: {attr_value}')
-                logging.info(f"Attributes: {attributes_info}")
-            else:
-                logging.info("No attributes found.")
-            
-            logging.info(f"Text: {element.text}")
-        else:
-            logging.info(f"No element found at ({x}, {y}).")
-    except Exception as e:
-        logging.error(f"An error occurred while fetching element details: {e}")
-
-# Function to perform clock in/out (just as a placeholder)
+# Function to perform clock in/out
 def clock_in_or_out(action):
     options = Options()
     options.add_argument('--headless')
@@ -66,12 +36,16 @@ def clock_in_or_out(action):
         logging.info("Logging-in successful.")
         time.sleep(10)  # Wait for 10 seconds after successful login
         
-        # Wait for the top bar to be visible
-        wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="dbox-top-bar"]')))
+        # Locate the element by coordinates (927, 20)
+        script = "return document.elementFromPoint(927, 20);"
+        element = driver.execute_script(script)
         
-        # Print element details at specified coordinates
-        print_element_details_at_coordinates(driver, INSPECT_X, INSPECT_Y)
-        
+        if element:
+            logging.info(f"Element found at (927, 20):")
+            logging.info(f"Tag Name: {element.tag_name}")
+            logging.info(f"Text: {element.text.strip()}")
+        else:
+            logging.error("No element found at the specified coordinates.")
     except Exception as e:
         logging.error(f"An error occurred during {action}: {e}")
     finally:
@@ -91,6 +65,7 @@ def main():
     
     # Perform clock-in or clock-out
     clock_in_or_out("clockin")
+    clock_in_or_out("clockout")
 
 if __name__ == "__main__":
     main()
