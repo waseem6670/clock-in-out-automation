@@ -46,9 +46,17 @@ def clock_in_or_out(action):
             logging.info(f"Tag Name: {element.tag_name}")
             logging.info(f"Text: {element.text.strip()}")
             
-            # Click on the element
-            driver.execute_script("arguments[0].click();", element)
-            logging.info("Click action performed on the element at the specified coordinates.")
+            # Scroll the element into view
+            driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            time.sleep(1)  # Wait for the element to scroll into view
+
+            # Ensure the element is interactable
+            if element.is_displayed() and element.is_enabled():
+                # Use JavaScript to trigger a click event
+                driver.execute_script("arguments[0].click();", element)
+                logging.info("Click action performed on the element at the specified coordinates.")
+            else:
+                logging.error("Element at the specified coordinates is not interactable.")
         else:
             logging.error("No element found at the specified coordinates.")
     except Exception as e:
@@ -70,7 +78,7 @@ def main():
     
     # Perform clock-in or clock-out
     clock_in_or_out("clockin")
-    #clock_in_or_out("clockout")
+    clock_in_or_out("clockout")
 
 if __name__ == "__main__":
     main()
