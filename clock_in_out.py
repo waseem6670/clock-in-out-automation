@@ -35,30 +35,17 @@ def clock_in_or_out(action):
         driver.find_element(By.ID, "login-submit").click()
         
         logging.info("Logging-in successful.")
-        time.sleep(10)  # Wait for 10 seconds after successful login
         
-        # Locate the element by coordinates (927, 20)
-        script = "return document.elementFromPoint(927, 20);"
-        element = driver.execute_script(script)
+        # Wait for the topbar to be hydrated and the clock-in/out button to be clickable
+        clock_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Clock')]")))
         
-        if element:
-            logging.info(f"Element found at (927, 20):")
-            logging.info(f"Tag Name: {element.tag_name}")
-            logging.info(f"Text: {element.text.strip()}")
-            
-            # Scroll the element into view
-            driver.execute_script("arguments[0].scrollIntoView(true);", element)
-            time.sleep(1)  # Wait for the element to scroll into view
-
-            # Ensure the element is interactable
-            if element.is_displayed() and element.is_enabled():
-                # Use JavaScript to trigger a click event
-                driver.execute_script("arguments[0].click();", element)
-                logging.info("Click action performed on the element at the specified coordinates.")
-            else:
-                logging.error("Element at the specified coordinates is not interactable.")
+        # Click the button if found
+        if clock_button:
+            clock_button.click()
+            logging.info("Clock-in/out button clicked.")
         else:
-            logging.error("No element found at the specified coordinates.")
+            logging.error("Clock-in/out button not found.")
+            
     except Exception as e:
         logging.error(f"An error occurred during {action}: {e}")
     finally:
