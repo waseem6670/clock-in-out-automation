@@ -25,7 +25,7 @@ def clock_in_or_out(action):
             time.sleep(10)  # You might want to replace this with a more specific wait condition
             
             # Wait for the hydrated topbar to appear after login
-            page.wait_for_selector('.hydrated_topbar_selector')  # Replace with actual selector
+            page.wait_for_selector('#dbox-top-bar')  # Replace with actual selector
             
             # Locate the clock-in/out button within the hydrated topbar
             element = page.evaluate("document.elementFromPoint(927, 20);")
