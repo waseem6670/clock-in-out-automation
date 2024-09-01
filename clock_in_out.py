@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 def clock_in_or_out(action):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  # Set headless=False for debugging
+        browser = p.chromium.launch(headless=True)  # Set headless=False for debugging
         context = browser.new_context(viewport={"width": 1920, "height": 1080})
         page = context.new_page()
         
