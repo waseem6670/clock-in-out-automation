@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 def clock_in_or_out(action):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)  # Set headless=False for debugging
+        browser = p.chromium.launch(headless=True)  # Set headless=True for CI environments
         context = browser.new_context(viewport={"width": 1920, "height": 1080})
         page = context.new_page()
         
@@ -24,22 +24,18 @@ def clock_in_or_out(action):
             # Wait for the page to fully load (can be optimized)
             time.sleep(10)  # You might want to replace this with a more specific wait condition
             
-            # Wait for the hydrated topbar to appear after login
-            page.wait_for_selector('#dbox-top-bar')  # Replace with actual selector
+            # Wait for the top bar to appear after login
+            page.wait_for_selector('#dbox-top-bar')
             
-            # Locate the clock-in/out button within the hydrated topbar
+            # Locate the element at the specified coordinates (927, 20)
             element = page.evaluate("document.elementFromPoint(927, 20);")
             
             if element:
-                logging.info(f"Element found at (927, 20): {element['tagName']}")
-                logging.info(f"Text: {element['innerText'].strip()}")
-                
-                # Ensure the element is interactable
-                if page.is_visible(f"{element['tagName']}") and page.is_enabled(f"{element['tagName']}"):
-                    # page.click(f"{element['tagName']}")
-                    logging.info("Click action performed on the element.")
-                else:
-                    logging.error("Element at the specified coordinates is not interactable.")
+                # Log information about the element
+                logging.info(f"Element found at (927, 20): {element}")
+                logging.info(f"Tag Name: {element.get('tagName', 'N/A')}")
+                logging.info(f"Text: {element.get('innerText', '').strip()}")
+                logging.info(f"Is Connected: {element.get('isConnected', False)}")
             else:
                 logging.error("No element found at the specified coordinates.")
         except Exception as e:
